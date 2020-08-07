@@ -40,9 +40,44 @@ router.post("/", validateProject, (req, res) => {
 
 //ABLE TO POST AN ACTION TO A CURRENT PROJECT
 router.post("/:id/actions", validateAction, (req, res) => {
-    res.status(201).json(req.body)
-})
-///CUSTOM MIDDLEWARE
+  res.status(201).json(req.body);
+});
+
+////////////DELETE////////////////
+//ABLE TO DELETE A PROJECT
+router.delete("/:id", validateId, (req, res) => {
+  Projects.remove(req.query.id)
+    .then((data) => {
+      if (data.length === 0) {
+        res.status(404).json({ message: "Project does not exisit" });
+      } else {
+        res.status(200).json("Project has been deleted");
+      }
+    })
+    .catch((data) => {
+      res.status(500).json({ error: "Something went wrong in the server" });
+    });
+});
+
+////////////PUT ////////////////////
+//ABLE TO PUT(UPDATE) A PROJECT NAME
+router.put("/:id", validateId, (req, res) => {
+  if (!req.body.name) {
+    res.status(400).json({ message: "missing required name field" });
+  } else {
+    Projects.update(req.query.id, req.body)
+      .then((data) => {
+        Projects.get(req.params.id).then((query) => {
+          res.status(200).json(query);
+        });
+      })
+      .catch((data) => {
+        res.status(500).json({ error: "Something went wrong with the" });
+      });
+  }
+});
+
+///////////CUSTOM MIDDLEWARE//////////
 
 //VALIDATES THE ID
 function validateId(req, res, next) {
@@ -89,7 +124,7 @@ function validateAction(req, res, next) {
   } else if (!req.body.notes) {
     res.status(400).json({ message: "missing action notes" });
   } else {
-    Actions.insert({ ...req.body, project_id: req.params.id, id: req.params.id })
+    Actions.insert({ ...req.body, project_id: req.params.id })
       .then((data) => {
         req.actions = data;
         next();
