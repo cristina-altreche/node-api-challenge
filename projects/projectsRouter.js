@@ -39,8 +39,17 @@ router.post("/", validateProject, (req, res) => {
 });
 
 //ABLE TO POST AN ACTION TO A CURRENT PROJECT
-router.post("/:id/actions", validateAction, (req, res) => {
-  res.status(201).json(req.body);
+router.post("/:id/actions", validateProjectId, (req, res) => {
+  const body = req.body;
+
+  Actions.insert(body)
+    .then((data) => {
+      res.status(201).json({ data });
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(500).json({ error: error.message });
+    });
 });
 
 ////////////DELETE////////////////
@@ -133,6 +142,24 @@ function validateAction(req, res, next) {
         res.status(500).json({ error: "Something went wrong with server" });
       });
   }
+}
+
+//Validate Project id
+function validateProjectId(req, res, next) {
+  const id = req.params.id;
+
+  Projects.get(id)
+    .then((project) => {
+      if (project) {
+        next();
+      } else {
+        res.status(400).json({ message: "invalid project id" });
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(500).json({ error: error.message });
+    });
 }
 
 module.exports = router;
